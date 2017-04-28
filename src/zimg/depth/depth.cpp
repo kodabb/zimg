@@ -1,3 +1,4 @@
+#include "common/ccdep.h"
 #include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/make_unique.h"
@@ -35,7 +36,7 @@ DepthConversion::DepthConversion(unsigned width, unsigned height) :
 	cpu{ CPUClass::NONE }
 {}
 
-std::unique_ptr<graph::ImageFilter> DepthConversion::create() const try
+std::unique_ptr<graph::ImageFilter> DepthConversion::create() const TRY_FUNC_BEGIN
 {
 	if (width > pixel_max_width(pixel_in.type) || width > pixel_max_width(pixel_out.type))
 		error::throw_<error::OutOfMemory>();
@@ -48,9 +49,9 @@ std::unique_ptr<graph::ImageFilter> DepthConversion::create() const try
 		return create_convert_to_float(width, height, pixel_in, pixel_out, cpu);
 	else
 		return create_dither(dither_type, width, height, pixel_in, pixel_out, cpu);
-} catch (const std::bad_alloc &) {
+} CATCH (const std::bad_alloc &) {
 	error::throw_<error::OutOfMemory>();
-}
+} TRY_FUNC_END
 
 } // namespace depth
 } // namespace zimg

@@ -151,6 +151,10 @@ using static_string_map = static_map<const char *, T, N, _static_map_strcmp>;
 #include <algorithm>
 #include <stdexcept>
 
+#if (defined(_MSC_VER) && !defined(_CPPUNWIND)) || (defined(__GNUC__) && !defined(__EXCEPTIONS))
+  #include <cstdlib>
+#endif
+
 namespace zimg {
 
 template <class Key, class T, std::size_t N, class Compare>
@@ -214,8 +218,13 @@ SM_CONSTEXPR_14 static_map<Key, T, N, Compare>::static_map(std::initializer_list
 	m_size(init.size()),
 	m_array{}
 {
+#if !((defined(_MSC_VER) && !defined(_CPPUNWIND)) || (defined(__GNUC__) && !defined(__EXCEPTIONS)))
 	if (init.size() > N)
 		throw std::out_of_range("");
+#else
+	if (init.size() > N)
+		std::abort();
+#endif
 
 	size_type i = 0;
 	for (auto v = init.begin(); v != init.end(); ++v) {
@@ -258,8 +267,13 @@ template <class Key, class T, std::size_t N, class Compare>
 const T &static_map<Key, T, N, Compare>::at(const Key &key) const
 {
 	const_iterator it = find(key);
+#if !((defined(_MSC_VER) && !defined(_CPPUNWIND)) || (defined(__GNUC__) && !defined(__EXCEPTIONS)))
 	if (it == end())
 		throw std::out_of_range("");
+#else
+	if (it == end())
+		std::abort();
+#endif
 	return it->second;
 }
 

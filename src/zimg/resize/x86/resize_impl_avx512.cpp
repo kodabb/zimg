@@ -1418,10 +1418,10 @@ public:
 	{
 		auto range = get_required_col_range(left, right);
 
-		try {
+		TRY {
 			checked_size_t size = (static_cast<checked_size_t>(range.second) - floor_n(range.first, 32) + 32) * sizeof(uint16_t) * 32;
 			return size.get();
-		} catch (const std::overflow_error &) {
+		} CATCH (const std::overflow_error &) {
 			error::throw_<error::OutOfMemory>();
 		}
 	}
@@ -1475,10 +1475,10 @@ public:
 	{
 		auto range = get_required_col_range(left, right);
 
-		try {
+		TRY {
 			checked_size_t size = (static_cast<checked_size_t>(range.second) - floor_n(range.first, 16) + 16) * sizeof(pixel_type) * 16;
 			return size.get();
-		} catch (const std::overflow_error &) {
+		} CATCH (const std::overflow_error &) {
 			error::throw_<error::OutOfMemory>();
 		}
 	}
@@ -1735,10 +1735,10 @@ public:
 	{
 		checked_size_t size = 0;
 
-		try {
+		TRY {
 			if (m_filter.filter_width > 8)
 				size += (ceil_n(checked_size_t{ right }, 32) - floor_n(left, 32)) * sizeof(uint32_t);
-		} catch (const std::overflow_error &) {
+		} CATCH (const std::overflow_error &) {
 			error::throw_<error::OutOfMemory>();
 		}
 

@@ -4,6 +4,7 @@
 #define ZIMG_EXCEPT_H_
 
 #include <stdexcept>
+#include "ccdep.h"
 
 namespace zimg {
 namespace error {
@@ -48,16 +49,21 @@ DECLARE_EXCEPTION(NoFieldParityConversion, UnsupportedOperation)
 template <class T>
 [[noreturn]] void throw_()
 {
-	throw T{};
+	THROW(T{});
 }
 
 template <class T>
 [[noreturn]] void throw_(const char *msg)
 {
-	throw T{ msg };
+	THROW(T{ msg });
 }
 
 } // namespace error
 } // namespace zimg
+
+#if (defined(_MSC_VER) && !defined(_CPPUNWIND)) || (defined(__GNUC__) && !defined(__EXCEPTIONS))
+#include <cstdlib>
+inline void zimg_x_abort() { std::abort(); }
+#endif
 
 #endif // ZIMG_EXCEPT_H_

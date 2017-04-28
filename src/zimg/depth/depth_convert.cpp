@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <stdexcept>
+#include "common/ccdep.h"
 #include "common/checked_int.h"
 #include "common/except.h"
 #include "common/make_unique.h"
@@ -214,7 +215,7 @@ public:
 	{
 		checked_size_t size = 0;
 
-		try {
+		TRY {
 			if (m_func && m_f16c) {
 				unsigned pixel_align = std::max(pixel_alignment(m_pixel_in), pixel_alignment(m_pixel_out));
 
@@ -223,7 +224,7 @@ public:
 
 				size += static_cast<checked_size_t>(right - left) * sizeof(float);
 			}
-		} catch (const std::overflow_error &) {
+		} CATCH (const std::overflow_error &) {
 			error::throw_<error::OutOfMemory>();
 		}
 

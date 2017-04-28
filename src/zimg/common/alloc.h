@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <vector>
 #include "align.h"
+#include "ccdep.h"
 #include "checked_int.h"
 #include "except.h"
 
@@ -109,9 +110,9 @@ public:
 	template <class T = void>
 	T *allocate(checked_size_t bytes)
 	{
-		try {
+		TRY {
 			m_count += ceil_n(bytes, ALIGNMENT);
-		} catch (const std::overflow_error &) {
+		} CATCH (const std::overflow_error &) {
 			error::throw_<error::OutOfMemory>();
 		}
 
@@ -162,7 +163,7 @@ struct AlignedAllocator {
 		T *ptr = static_cast<T *>(zimg_x_aligned_malloc(n * sizeof(T), ALIGNMENT));
 
 		if (!ptr)
-			throw std::bad_alloc{};
+			THROW(std::bad_alloc{});
 
 		return ptr;
 	}

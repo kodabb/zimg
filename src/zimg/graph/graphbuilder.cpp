@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cstddef>
 #include <iterator>
+#include "common/ccdep.h"
 #include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/make_unique.h"
@@ -540,7 +541,7 @@ void GraphBuilder::convert_resize(const resize_spec &spec, const params *params,
 	m_state.active_height = spec.height;
 }
 
-GraphBuilder &GraphBuilder::set_source(const state &source) try
+GraphBuilder &GraphBuilder::set_source(const state &source) TRY_FUNC_BEGIN
 {
 	if (m_graph)
 		error::throw_<error::InternalError>("source already set");
@@ -550,11 +551,11 @@ GraphBuilder &GraphBuilder::set_source(const state &source) try
 	m_state = source;
 
 	return *this;
-} catch (const std::bad_alloc &) {
+} CATCH (const std::bad_alloc &) {
 	error::throw_<error::OutOfMemory>();
-}
+} TRY_FUNC_END
 
-GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *params, FilterFactory *factory) try
+GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *params, FilterFactory *factory) TRY_FUNC_BEGIN
 {
 	DefaultFilterFactory default_factory;
 
@@ -638,17 +639,17 @@ GraphBuilder &GraphBuilder::connect_graph(const state &target, const params *par
 	}
 
 	return *this;
-} catch (const std::bad_alloc &) {
+} CATCH (const std::bad_alloc &) {
 	error::throw_<error::OutOfMemory>();
-}
+} TRY_FUNC_END
 
-std::unique_ptr<FilterGraph> GraphBuilder::complete_graph() try
+std::unique_ptr<FilterGraph> GraphBuilder::complete_graph() TRY_FUNC_BEGIN
 {
 	m_graph->complete();
 	return std::move(m_graph);
-} catch (const std::bad_alloc &) {
+} CATCH (const std::bad_alloc &) {
 	error::throw_<error::OutOfMemory>();
-}
+} TRY_FUNC_END
 
 } // namespace graph
 } // namespace zimg

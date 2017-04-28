@@ -1,4 +1,5 @@
 #include <algorithm>
+#include "common/ccdep.h"
 #include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/make_unique.h"
@@ -39,7 +40,7 @@ ResizeConversion::ResizeConversion(unsigned src_width, unsigned src_height, Pixe
 	cpu{ CPUClass::NONE }
 {}
 
-auto ResizeConversion::create() const -> filter_pair try
+auto ResizeConversion::create() const -> filter_pair TRY_FUNC_BEGIN
 {
 	if (src_width > pixel_max_width(type) || dst_width > pixel_max_width(type))
 		error::throw_<error::OutOfMemory>();
@@ -101,9 +102,9 @@ auto ResizeConversion::create() const -> filter_pair try
 	}
 
 	return ret;
-} catch (const std::bad_alloc &) {
+} CATCH (const std::bad_alloc &) {
 	error::throw_<error::OutOfMemory>();
-}
+} TRY_FUNC_END
 
 } // namespace resize
 } // namespace zimg

@@ -529,10 +529,10 @@ public:
 
 	size_t get_context_size() const override
 	{
-		try {
+		TRY {
 			checked_size_t size = (static_cast<checked_size_t>(m_width) + 2) * sizeof(float) * 2;
 			return size.get();
-		} catch (const std::overflow_error &) {
+		} CATCH (const std::overflow_error &) {
 			error::throw_<error::OutOfMemory>();
 		}
 	}

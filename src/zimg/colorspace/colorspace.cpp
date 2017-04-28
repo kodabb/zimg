@@ -1,5 +1,6 @@
 #include <memory>
 #include <vector>
+#include "common/ccdep.h"
 #include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/make_unique.h"
@@ -84,7 +85,7 @@ ColorspaceConversion::ColorspaceConversion(unsigned width, unsigned height) :
 	cpu{ CPUClass::NONE }
 {}
 
-std::unique_ptr<graph::ImageFilter> ColorspaceConversion::create() const try
+std::unique_ptr<graph::ImageFilter> ColorspaceConversion::create() const TRY_FUNC_BEGIN
 {
 	OperationParams params;
 	params.set_peak_luminance(peak_luminance)
@@ -95,9 +96,9 @@ std::unique_ptr<graph::ImageFilter> ColorspaceConversion::create() const try
 		return ztd::make_unique<graph::MuxFilter>(ztd::make_unique<graph::CopyFilter>(width, height, PixelType::FLOAT));
 	else
 		return ztd::make_unique<ColorspaceConversionImpl>(width, height, csp_in, csp_out, params, cpu);
-} catch (const std::bad_alloc &) {
+} CATCH (const std::bad_alloc &) {
 	error::throw_<error::OutOfMemory>();
-}
+} TRY_FUNC_END
 
 } // namespace colorspace
 } // namespace zimg

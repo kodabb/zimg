@@ -22,13 +22,13 @@ class HEX_LF_C
 {
     using size_t=decltype(sizeof(0)); // avoid including extra headers
     static constexpr const long double _0x1p256=1.15792089237316195424e77L; // 2^256
-    struct BadDigit{};
+	static int BadDigit() { return 0; }
     // Unportable, but will work for ANSI charset
     static constexpr int hexDigit(char c)
     {
         return '0'<=c&&c<='9' ? c-'0' :
                'a'<=c&&c<='f' ? c-'a'+0xa :
-               'A'<=c&&c<='F' ? c-'A'+0xA : throw BadDigit{};
+               'A'<=c&&c<='F' ? c-'A'+0xA : BadDigit();
     }
     // lightweight constexpr analogue of std::strtoull
     template<typename Int>
@@ -109,7 +109,7 @@ class HEX_LF_C
                       scalbn(beforePoint(str),exponent(str)),
                       scalbn(1.L/16,exponent(str)));
     }
-    struct UnsupportedLiteralLength{};
+	static unsigned long long UnsupportedLiteralLength() { return 0; }
 public:
     // This helps to convert string literal to a valid template parameter
     // It just packs the given chunk (8 chars) of the string into a ulonglong.
@@ -123,7 +123,7 @@ public:
                                                       size_t numIndex)
     {
         // relying on CHAR_BIT==8 here
-        return N>32 ? throw UnsupportedLiteralLength{} :
+        return N>32 ? UnsupportedLiteralLength() :
                start==end || start>=N ? 0 :
                string_in_ull(array,start+1,end,numIndex) |
                     ((array[start]&0xffull)<<(8*(start-numIndex)));

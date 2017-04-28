@@ -4,6 +4,7 @@
 #include <tuple>
 #include <type_traits>
 #include <utility>
+#include "common/ccdep.h"
 #include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/make_unique.h"
@@ -42,7 +43,9 @@ constexpr unsigned VERSION_INFO[] = { 2, 5, 1 };
 template <class T, class U>
 T *assert_dynamic_type(U *ptr) noexcept
 {
+#if !((defined(_MSC_VER) && !defined(_CPPRTTI)) || (defined(__GNUC__) && !defined(__GXX_RTTI)))
 	zassert_d(dynamic_cast<T *>(ptr), "bad dynamic type");
+#endif
 	return static_cast<T *>(ptr);
 }
 
@@ -54,9 +57,9 @@ void clear_last_error_message() noexcept
 
 void record_exception_message(const zimg::error::Exception &e) noexcept
 {
-	try {
+	TRY {
 		g_last_error_msg = e.what();
-	} catch (const std::bad_alloc &) {
+	} CATCH (const std::bad_alloc &) {
 		clear_last_error_message();
 	}
 }
@@ -67,38 +70,38 @@ zimg_error_code_e handle_exception(std::exception_ptr eptr) noexcept
 
 	zimg_error_code_e code = ZIMG_ERROR_UNKNOWN;
 
-#define CATCH(type, error_code) catch (const type &e) { record_exception_message(e); code = (error_code); }
-#define FATAL(type, error_code, msg) catch (const type &e) { record_exception_message(e); code = (error_code); zassert_d(false, msg); }
-	try {
+#define CATCH_(type, error_code) CATCH_T (const type, &e) { record_exception_message(e); code = (error_code); }
+#define FATAL(type, error_code, msg) CATCH_T (const type, &e) { record_exception_message(e); code = (error_code); zassert_d(false, msg); }
+	TRY {
 		std::rethrow_exception(eptr);
 	}
-	CATCH(UnknownError,            ZIMG_ERROR_UNKNOWN)
-	CATCH(OutOfMemory,             ZIMG_ERROR_OUT_OF_MEMORY)
-	CATCH(UserCallbackFailed,      ZIMG_ERROR_USER_CALLBACK_FAILED)
+	CATCH_(UnknownError,            ZIMG_ERROR_UNKNOWN)
+	CATCH_(OutOfMemory,             ZIMG_ERROR_OUT_OF_MEMORY)
+	CATCH_(UserCallbackFailed,      ZIMG_ERROR_USER_CALLBACK_FAILED)
 
-	CATCH(GreyscaleSubsampling,    ZIMG_ERROR_GREYSCALE_SUBSAMPLING)
-	CATCH(ColorFamilyMismatch,     ZIMG_ERROR_COLOR_FAMILY_MISMATCH)
-	CATCH(ImageNotDivisible,       ZIMG_ERROR_IMAGE_NOT_DIVISIBLE)
-	CATCH(BitDepthOverflow,        ZIMG_ERROR_BIT_DEPTH_OVERFLOW)
-	CATCH(LogicError,              ZIMG_ERROR_LOGIC)
+	CATCH_(GreyscaleSubsampling,    ZIMG_ERROR_GREYSCALE_SUBSAMPLING)
+	CATCH_(ColorFamilyMismatch,     ZIMG_ERROR_COLOR_FAMILY_MISMATCH)
+	CATCH_(ImageNotDivisible,       ZIMG_ERROR_IMAGE_NOT_DIVISIBLE)
+	CATCH_(BitDepthOverflow,        ZIMG_ERROR_BIT_DEPTH_OVERFLOW)
+	CATCH_(LogicError,              ZIMG_ERROR_LOGIC)
 
-	CATCH(EnumOutOfRange,          ZIMG_ERROR_ENUM_OUT_OF_RANGE)
-	CATCH(InvalidImageSize,        ZIMG_ERROR_INVALID_IMAGE_SIZE)
-	CATCH(IllegalArgument,         ZIMG_ERROR_ILLEGAL_ARGUMENT)
+	CATCH_(EnumOutOfRange,          ZIMG_ERROR_ENUM_OUT_OF_RANGE)
+	CATCH_(InvalidImageSize,        ZIMG_ERROR_INVALID_IMAGE_SIZE)
+	CATCH_(IllegalArgument,         ZIMG_ERROR_ILLEGAL_ARGUMENT)
 
-	CATCH(UnsupportedSubsampling,  ZIMG_ERROR_UNSUPPORTED_SUBSAMPLING)
-	CATCH(NoColorspaceConversion,  ZIMG_ERROR_NO_COLORSPACE_CONVERSION)
-	CATCH(NoFieldParityConversion, ZIMG_ERROR_NO_FIELD_PARITY_CONVERSION)
-	CATCH(ResamplingNotAvailable,  ZIMG_ERROR_RESAMPLING_NOT_AVAILABLE)
-	CATCH(UnsupportedOperation,    ZIMG_ERROR_UNSUPPORTED_OPERATION)
+	CATCH_(UnsupportedSubsampling,  ZIMG_ERROR_UNSUPPORTED_SUBSAMPLING)
+	CATCH_(NoColorspaceConversion,  ZIMG_ERROR_NO_COLORSPACE_CONVERSION)
+	CATCH_(NoFieldParityConversion, ZIMG_ERROR_NO_FIELD_PARITY_CONVERSION)
+	CATCH_(ResamplingNotAvailable,  ZIMG_ERROR_RESAMPLING_NOT_AVAILABLE)
+	CATCH_(UnsupportedOperation,    ZIMG_ERROR_UNSUPPORTED_OPERATION)
 
 	FATAL(InternalError,           ZIMG_ERROR_UNKNOWN, "internal error generated")
 	FATAL(Exception,               ZIMG_ERROR_UNKNOWN, "unregistered error generated")
-	catch (...) {
+	CATCH_ALL {
 		g_last_error_msg[0] = '\0';
 		zassert_d(false, "bad exception type");
 	}
-#undef CATCH
+#undef CATCH_
 #undef FATAL
 	g_last_error = code;
 	return code;
@@ -295,7 +298,7 @@ std::unique_ptr<zimg::resize::Filter> translate_resize_filter(zimg_resample_filt
 	if (filter_type == ZIMG_RESIZE_UNRESIZE)
 		return nullptr;
 
-	try {
+	TRY {
 		switch (filter_type) {
 		case ZIMG_RESIZE_POINT:
 			return ztd::make_unique<zimg::resize::PointFilter>();
@@ -315,7 +318,7 @@ std::unique_ptr<zimg::resize::Filter> translate_resize_filter(zimg_resample_filt
 		default:
 			zimg::error::throw_<zimg::error::EnumOutOfRange>("unrecognized resampling filter");
 		}
-	} catch (const std::bad_alloc &) {
+	} CATCH (const std::bad_alloc &) {
 		zimg::error::throw_<zimg::error::OutOfMemory>();
 	}
 }
@@ -482,9 +485,9 @@ unsigned zimg_select_buffer_mask(unsigned count)
 
 #define EX_BEGIN \
   zimg_error_code_e ret = ZIMG_ERROR_SUCCESS; \
-  try {
+  TRY {
 #define EX_END \
-  } catch (...) { \
+  } CATCH_ALL { \
     ret = handle_exception(std::current_exception()); \
   } \
   return ret;
@@ -647,7 +650,7 @@ zimg_filter_graph *zimg_filter_graph_build(const zimg_image_format *src_format, 
 	zassert_d(src_format, "null pointer");
 	zassert_d(dst_format, "null pointer");
 
-	try {
+	TRY {
 		zimg::graph::GraphBuilder::state src_state;
 		zimg::graph::GraphBuilder::state dst_state;
 		zimg::graph::GraphBuilder::params graph_params;
@@ -660,7 +663,7 @@ zimg_filter_graph *zimg_filter_graph_build(const zimg_image_format *src_format, 
 		                                  .connect_graph(dst_state, params ? &graph_params : nullptr)
 		                                  .complete_graph()
 		                                  .release();
-	} catch (...) {
+	} CATCH_ALL {
 		handle_exception(std::current_exception());
 		return nullptr;
 	}

@@ -3,6 +3,7 @@
 #include <limits>
 #include <stdexcept>
 #include <vector>
+#include "common/ccdep.h"
 #include "common/except.h"
 #include "common/matrix.h"
 #include "common/zassert.h"
@@ -109,7 +110,7 @@ BilinearContext create_bilinear_context(unsigned in, unsigned out, double shift)
 {
 	BilinearContext ctx;
 
-	try {
+	TRY {
 		// Map output shift to input shift.
 		RowMatrix<double> m = bilinear_weights(in, out, -shift * in / out);
 		RowMatrix<double> transpose_m = ~m;
@@ -156,7 +157,7 @@ BilinearContext create_bilinear_context(unsigned in, unsigned out, double shift)
 			ctx.lu_l[i] = static_cast<float>((1.0 / (lu.l[i] + epsilon<float>()))); // Pre-invert this value, as it is used in division.
 			ctx.lu_u[i] = static_cast<float>(lu.u[i]);
 		}
-	} catch (const std::length_error &) {
+	} CATCH (const std::length_error &) {
 		error::throw_<error::OutOfMemory>();
 	}
 

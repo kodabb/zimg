@@ -1,4 +1,5 @@
 #include <algorithm>
+#include "common/ccdep.h"
 #include "common/cpuinfo.h"
 #include "common/except.h"
 #include "common/make_unique.h"
@@ -34,7 +35,7 @@ UnresizeConversion::UnresizeConversion(unsigned up_width, unsigned up_height, Pi
 	cpu{ CPUClass::NONE }
 {}
 
-auto UnresizeConversion::create() const -> filter_pair try
+auto UnresizeConversion::create() const -> filter_pair TRY_FUNC_BEGIN
 {
 	if (up_width > pixel_max_width(PixelType::FLOAT) || orig_width > pixel_max_width(PixelType::FLOAT))
 		error::throw_<error::OutOfMemory>();
@@ -87,9 +88,9 @@ auto UnresizeConversion::create() const -> filter_pair try
 	}
 
 	return ret;
-} catch (const std::bad_alloc &) {
+} CATCH (const std::bad_alloc &) {
 	error::throw_<error::OutOfMemory>();
-}
+} TRY_FUNC_END
 
 } // namespace unresize
 } // namespace zimg

@@ -5,6 +5,7 @@
 #include <vector>
 #include "common/align.h"
 #include "common/alloc.h"
+#include "common/ccdep.h"
 #include "common/except.h"
 #include "common/make_unique.h"
 #include "common/pixel.h"
@@ -485,9 +486,9 @@ public:
 		if (cache_lines > static_cast<size_t>(PTRDIFF_MAX) / stride)
 			error::throw_<error::OutOfMemory>();
 
-		try {
+		TRY {
 			alloc.allocate(static_cast<checked_size_t>(stride) * cache_lines * num_planes);
-		} catch (const std::overflow_error &) {
+		} CATCH (const std::overflow_error &) {
 			error::throw_<error::OutOfMemory>();
 		}
 
@@ -651,9 +652,9 @@ public:
 		if (cache_lines > static_cast<size_t>(PTRDIFF_MAX / stride))
 			error::throw_<error::OutOfMemory>();
 
-		try {
+		TRY {
 			alloc.allocate(static_cast<checked_size_t>(stride) * cache_lines * 2);
-		} catch (const std::overflow_error &) {
+		} CATCH (const std::overflow_error &) {
 			error::throw_<error::OutOfMemory>();
 		}
 
@@ -1082,9 +1083,9 @@ void FilterGraph::callback::operator()(unsigned i, unsigned left, unsigned right
 {
 	int ret;
 
-	try {
+	TRY {
 		ret = m_func(m_user, i, left, right);
-	} catch (...) {
+	} CATCH_ALL {
 		ret = 1;
 		zassert_d(false, "user callback must not throw");
 	}

@@ -5,6 +5,7 @@
 #include <tuple>
 #include <utility>
 #include "common/alloc.h"
+#include "common/ccdep.h"
 #include "common/checked_int.h"
 #include "common/except.h"
 #include "common/make_unique.h"
@@ -281,7 +282,7 @@ public:
 	{
 		checked_size_t size = 0;
 
-		try {
+		TRY {
 			if (m_f16c) {
 				unsigned pixel_align = std::max(pixel_alignment(m_pixel_in), pixel_alignment(m_pixel_out));
 
@@ -290,7 +291,7 @@ public:
 
 				size += static_cast<checked_size_t>(right - left) * sizeof(float);
 			}
-		} catch (const std::overflow_error &) {
+		} CATCH (const std::overflow_error &) {
 			error::throw_<error::OutOfMemory>();
 		}
 
@@ -387,20 +388,20 @@ public:
 
 	size_t get_context_size() const override
 	{
-		try {
+		TRY {
 			checked_size_t size = (static_cast<checked_size_t>(m_width) + 2) * sizeof(float) * 2;
 			return size.get();
-		} catch (const std::overflow_error &) {
+		} CATCH (const std::overflow_error &) {
 			error::throw_<error::OutOfMemory>();
 		}
 	}
 
 	size_t get_tmp_size(unsigned, unsigned) const override
 	{
-		try {
+		TRY {
 			checked_size_t size = m_f16c ? ceil_n(static_cast<checked_size_t>(m_width) * sizeof(float), ALIGNMENT) : 0;
 			return size.get();
-		} catch (const std::overflow_error &) {
+		} CATCH (const std::overflow_error &) {
 			error::throw_<error::OutOfMemory>();
 		}
 	}

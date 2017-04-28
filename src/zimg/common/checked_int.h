@@ -279,6 +279,10 @@ typedef checked_integer<std::uintptr_t> checked_uintptr_t;
 // Implementation details follow.
 #include <stdexcept>
 
+#if (defined(_MSC_VER) && !defined(_CPPUNWIND)) || (defined(__GNUC__) && !defined(__EXCEPTIONS))
+  #include <cstdlib>
+#endif
+
 namespace zimg {
 
 template <class T, bool = std::numeric_limits<T>::is_signed>
@@ -286,7 +290,11 @@ struct _checked_arithmetic;
 
 [[noreturn]] inline void _checked_arithmetic_throw()
 {
+#if !((defined(_MSC_VER) && !defined(_CPPUNWIND)) || (defined(__GNUC__) && !defined(__EXCEPTIONS)))
 	throw std::overflow_error("overflow_error");
+#else
+	std::abort();
+#endif
 }
 
 // Unsigned.

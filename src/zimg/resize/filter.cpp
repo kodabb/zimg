@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <stdexcept>
 #include <vector>
+#include "common/ccdep.h"
 #include "common/except.h"
 #include "common/libm_wrapper.h"
 #include "common/matrix.h"
@@ -59,7 +60,7 @@ FilterContext matrix_to_filter(const RowMatrix<double> &m)
 
 	FilterContext e{};
 
-	try {
+	TRY {
 		e.filter_width = static_cast<unsigned>(width);
 		e.filter_rows = static_cast<unsigned>(m.rows());
 		e.input_width = static_cast<unsigned>(m.cols());
@@ -72,7 +73,7 @@ FilterContext matrix_to_filter(const RowMatrix<double> &m)
 		e.data.resize(static_cast<size_t>(e.stride) * e.filter_rows);
 		e.data_i16.resize(static_cast<size_t>(e.stride_i16) * e.filter_rows);
 		e.left.resize(e.filter_rows);
-	} catch (const std::length_error &) {
+	} CATCH (const std::length_error &) {
 		error::throw_<error::OutOfMemory>();
 	}
 
@@ -238,7 +239,7 @@ FilterContext compute_filter(const Filter &f, unsigned src_dim, unsigned dst_dim
 	if (src_dim <= support || width <= support)
 		error::throw_<error::ResamplingNotAvailable>("filter width too great for image dimensions");
 
-	try {
+	TRY {
 		RowMatrix<double> m{ dst_dim, src_dim };
 
 		for (unsigned i = 0; i < dst_dim; ++i) {
@@ -270,7 +271,7 @@ FilterContext compute_filter(const Filter &f, unsigned src_dim, unsigned dst_dim
 		}
 
 		return matrix_to_filter(m);
-	} catch (const std::length_error &) {
+	} CATCH (const std::length_error &) {
 		error::throw_<error::OutOfMemory>();
 	}
 }
